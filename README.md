@@ -6,3 +6,5 @@ $ git clone https://~~.git で作成する
 ② README作成しない場合
 $ mkdir ~~
 $ echo ~ のコピペ
+
+- coomitの際、$ git commit -m "xxx" --no-verifyでインストール省略
