@@ -7,4 +7,5 @@ $ git clone https://~~.git で作成する
 $ mkdir ~~
 $ echo ~ のコピペ
 
-- coomitの際、$ git commit -m "xxx" --no-verifyでインストール省略
+- git はローカルディレクトリの.gitファイル($ls -a)で紐付け情報を管理。
+- commitの際、$ git commit -m "xxx" --no-verifyでインストール省略
