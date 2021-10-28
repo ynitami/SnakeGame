@@ -49,7 +49,7 @@
     let changing_direction = false;
     // Horizontal velocity
     let foods = [];
-    const num_of_foods = 10;
+    const num_of_foods = 20;
     let dx = 10;
     // Vertical velocity
     let dy = 0;
@@ -149,13 +149,66 @@
             y: prevFood.y - prevFood.dy,
             dy: -prevFood.dy,
           };
-        } else {
+        }
+        //　へびと反射
+        const prevSnake = [...snake];
+        prevSnake.pop();
+        const crashSnakeIndex = prevSnake.findIndex(
+          (body) =>
+            [self.x, self.x - 5, self.x + 5].includes(body.x) &&
+            [self.y, self.y - 5, self.y + 5].includes(body.y)
+        );
+        // findIndexは該当なしで-1を返す
+        if (crashSnakeIndex !== -1) {
+          // x方向に横並び
+          console.log(crashSnakeIndex - 1);
+          console.log(crashSnakeIndex);
+          console.log(crashSnakeIndex + 1);
+          const snakeTale = crashSnakeIndex === prevSnake.length - 1;
+          const snakeHead = crashSnakeIndex === 0;
+          if (snakeTale) {
+            if (
+              prevSnake[crashSnakeIndex - 1].y === prevSnake[crashSnakeIndex].y
+            ) {
+              console.log("snakeTale");
+              return {
+                ...prevFood,
+                y: prevFood.y - prevFood.dy,
+                dy: -prevFood.dy,
+              };
+            }
+          } else if (snakeHead) {
+            if (prevSnake[crashSnakeIndex].y === prevSnake[crashSnakeIndex + 1].y) {
+              console.log("snakeHead");
+              return {
+                ...prevFood,
+                y: prevFood.y - prevFood.dy,
+                dy: -prevFood.dy,
+              };
+            }
+          } else if (
+            prevSnake[crashSnakeIndex - 1].y === prevSnake[crashSnakeIndex].y &&
+            prevSnake[crashSnakeIndex].y === prevSnake[crashSnakeIndex + 1].y
+          ) {
+            console.log("!snakeTale");
+            return {
+              ...prevFood,
+              y: prevFood.y - prevFood.dy,
+              dy: -prevFood.dy,
+            };
+          }
           return {
-            ...prevFood,
-            x: prevFood.x + prevFood.dx,
-            y: prevFood.y + prevFood.dy,
+            x: prevFood.x - prevFood.dx,
+            y: prevFood.y - prevFood.dy,
+            dx: -prevFood.dx,
+            dy: -prevFood.dy,
           };
         }
+        return {
+          ...prevFood,
+          x: prevFood.x + prevFood.dx,
+          y: prevFood.y + prevFood.dy,
+        };
       });
       // foods = foods.map((prevFood) => ({ ...prevFood, x: prevFood.x + prevFood.dx, y: prevFood.y + prevFood.dy }));
       // {...a, ...b}, [...a, ...b]でオブジェクトのマージができる；key, valueや、要素を分解して統合
@@ -179,7 +232,7 @@
         drawSnake();
         // Repeat
         main();
-      }, 300);
+      }, 200);
     }
 
     // draw a border around the canvas
@@ -283,7 +336,10 @@
       // Add the new head to the beginning of snake body
       snake.unshift(head);
       const has_eaten_food = foods.find((food) => {
-        return [food.x, food.x - 5, food.x + 5].includes(snake[0].x)  && [food.y, food.y - 5, food.y + 5].includes(snake[0].y);
+        return (
+          [food.x, food.x - 5, food.x + 5].includes(snake[0].x) &&
+          [food.y, food.y - 5, food.y + 5].includes(snake[0].y)
+        );
       });
       if (has_eaten_food) {
         // Increase score
@@ -292,7 +348,10 @@
         document.getElementById("score").innerHTML = score;
         // .filter：trueだけを残す
         foods = foods.filter((food) => {
-          return !([food.x, food.x - 5, food.x + 5].includes(snake[0].x)  && [food.y, food.y - 5, food.y + 5].includes(snake[0].y));
+          return !(
+            [food.x, food.x - 5, food.x + 5].includes(snake[0].x) &&
+            [food.y, food.y - 5, food.y + 5].includes(snake[0].y)
+          );
         });
         // Generate new food location
         gen_foods(num_of_foods);
