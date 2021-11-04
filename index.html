@@ -161,40 +161,65 @@
         // findIndexは該当なしで-1を返す
         if (crashSnakeIndex !== -1) {
           // x方向に横並び
-          console.log(crashSnakeIndex - 1);
-          console.log(crashSnakeIndex);
-          console.log(crashSnakeIndex + 1);
+          // console.log(crashSnakeIndex - 1);
+          // console.log(crashSnakeIndex);
+          // console.log(crashSnakeIndex + 1);
           const snakeTale = crashSnakeIndex === prevSnake.length - 1;
           const snakeHead = crashSnakeIndex === 0;
           if (snakeTale) {
             if (
               prevSnake[crashSnakeIndex - 1].y === prevSnake[crashSnakeIndex].y
             ) {
-              console.log("snakeTale");
               return {
                 ...prevFood,
                 y: prevFood.y - prevFood.dy,
                 dy: -prevFood.dy,
               };
+            } else if (
+              prevSnake[crashSnakeIndex - 1].x === prevSnake[crashSnakeIndex].x
+            ) {
+              return {
+                ...prevFood,
+                x: prevFood.x - prevFood.dx,
+                dx: -prevFood.dx,
+              };
             }
           } else if (snakeHead) {
-            if (prevSnake[crashSnakeIndex].y === prevSnake[crashSnakeIndex + 1].y) {
-              console.log("snakeHead");
+            if (
+              prevSnake[crashSnakeIndex].y === prevSnake[crashSnakeIndex + 1].y
+            ) {
               return {
                 ...prevFood,
                 y: prevFood.y - prevFood.dy,
                 dy: -prevFood.dy,
+              };
+            } else if (
+              prevSnake[crashSnakeIndex].x === prevSnake[crashSnakeIndex + 1].x
+            ) {
+              return {
+                ...prevFood,
+                x: prevFood.x - prevFood.dx,
+                dx: -prevFood.dx,
               };
             }
           } else if (
             prevSnake[crashSnakeIndex - 1].y === prevSnake[crashSnakeIndex].y &&
             prevSnake[crashSnakeIndex].y === prevSnake[crashSnakeIndex + 1].y
           ) {
-            console.log("!snakeTale");
+            // console.log("!snakeTale");
             return {
               ...prevFood,
               y: prevFood.y - prevFood.dy,
               dy: -prevFood.dy,
+            };
+          } else if (
+            prevSnake[crashSnakeIndex - 1].x === prevSnake[crashSnakeIndex].x &&
+            prevSnake[crashSnakeIndex].x === prevSnake[crashSnakeIndex + 1].x
+          ) {
+            return {
+              ...prevFood,
+              x: prevFood.x - prevFood.dx,
+              dx: -prevFood.dx,
             };
           }
           return {
@@ -232,7 +257,7 @@
         drawSnake();
         // Repeat
         main();
-      }, 200);
+      }, 100);
     }
 
     // draw a border around the canvas
