@@ -49,7 +49,7 @@
     let changing_direction = false;
     // Horizontal velocity
     let foods = [];
-    const num_of_foods = 20;
+    const num_of_foods = 5;
     let dx = 10;
     // Vertical velocity
     let dy = 0;
@@ -59,12 +59,43 @@
     // Return a two dimensional drawing context
     const snakeboard_ctx = snakeboard.getContext("2d");
     // Start game
+    let game;
     main();
 
     // function gen_foods() { 伝統的：どこで定義しても読み込めちゃう
     const gen_foods = (n) => {
       // arrow 関数：呼び出しより先に定義必要
       // Generate a random number the food x-coordinate
+      while (foods.filter((food) => food.poison).length == 0) {
+        const x = randomInt(0, (snakeboard.width - 10) / 10) * 10;
+        const y = randomInt(0, (snakeboard.height - 10) / 10) * 10;
+        const duplicated = foods.some((food) => {
+          return food.x === x && food.y === y;
+        });
+        if (!duplicated)
+          foods.push({
+            x,
+            y,
+            dx: [-5, 5][randomInt(0, 1)],
+            dy: [-5, 5][randomInt(0, 1)],
+            poison: true
+          });
+      }
+      while (foods.filter((food) => !food.poison).length < 2) {
+        const x = randomInt(0, (snakeboard.width - 10) / 10) * 10;
+        const y = randomInt(0, (snakeboard.height - 10) / 10) * 10;
+        const duplicated = foods.some((food) => {
+          return food.x === x && food.y === y;
+        });
+        if (!duplicated)
+          foods.push({
+            x,
+            y,
+            dx: [-5, 5][randomInt(0, 1)],
+            dy: [-5, 5][randomInt(0, 1)],
+            poison: false
+          });
+      }
       while (n > foods.length) {
         const x = randomInt(0, (snakeboard.width - 10) / 10) * 10;
         const y = randomInt(0, (snakeboard.height - 10) / 10) * 10;
@@ -77,6 +108,7 @@
             y,
             dx: [-5, 5][randomInt(0, 1)],
             dy: [-5, 5][randomInt(0, 1)],
+            poison: [true, false][randomInt(0,1)]
           });
       }
 
@@ -97,6 +129,7 @@
     };
 
     gen_foods(num_of_foods);
+
     function move_foods() {
       const nextFoodsCandidate = foods.map((food) => ({
         ...food,
@@ -118,6 +151,7 @@
             y: prevFood.y + crashFoods[0].dy,
             dx: crashFoods[0].dx,
             dy: crashFoods[0].dy,
+            poison: prevFood.poison
           };
         } else if (crashFoods.length > 1) {
           return {
@@ -125,6 +159,7 @@
             y: prevFood.y - prevFood.dy,
             dx: -prevFood.dx,
             dy: -prevFood.dy,
+            poison: prevFood.poison
           };
         }
         // 壁の反射
@@ -160,10 +195,12 @@
         );
         // findIndexは該当なしで-1を返す
         if (crashSnakeIndex !== -1) {
+          if (self.poison) {
+            clearInterval(game);
+            window.alert("GAME OVER")
+            return self;
+          }
           // x方向に横並び
-          // console.log(crashSnakeIndex - 1);
-          // console.log(crashSnakeIndex);
-          // console.log(crashSnakeIndex + 1);
           const snakeTale = crashSnakeIndex === prevSnake.length - 1;
           const snakeHead = crashSnakeIndex === 0;
           if (snakeTale) {
@@ -227,6 +264,7 @@
             y: prevFood.y - prevFood.dy,
             dx: -prevFood.dx,
             dy: -prevFood.dy,
+            poison: prevFood.poison
           };
         }
         return {
@@ -246,17 +284,18 @@
 
     // main function called repeatedly to keep the game running
     function main() {
-      if (has_game_ended()) return;
 
-      changing_direction = false;
-      setTimeout(function onTick() {
+      game = setInterval(function onTick() {
+        if (has_game_ended()) {
+          clearInterval(game);
+          window.alert("GAME OVER")
+        }
+        changing_direction = false;
         clear_board();
         move_foods();
         foods.forEach(drawFood);
         move_snake();
         drawSnake();
-        // Repeat
-        main();
       }, 100);
     }
 
@@ -280,6 +319,9 @@
 
     function drawFood(food) {
       snakeboard_ctx.fillStyle = "lightgreen";
+      if (food.poison) {
+        snakeboard_ctx.fillStyle = "darkorchid";
+      }
       snakeboard_ctx.strokestyle = "darkgreen";
       snakeboard_ctx.fillRect(food.x, food.y, 10, 10);
       snakeboard_ctx.strokeRect(food.x, food.y, 10, 10);
@@ -366,7 +408,12 @@
           [food.y, food.y - 5, food.y + 5].includes(snake[0].y)
         );
       });
-      if (has_eaten_food) {
+      if (!has_eaten_food){
+        // Remove the last part of snake body
+        snake.pop();
+        return;
+      }
+      if (!has_eaten_food.poison) {
         // Increase score
         score += 10;
         // Display score on screen
@@ -381,8 +428,8 @@
         // Generate new food location
         gen_foods(num_of_foods);
       } else {
-        // Remove the last part of snake body
-        snake.pop();
+        clearInterval(game);
+        window.alert("GAME OVER")
       }
     }
   </script>
