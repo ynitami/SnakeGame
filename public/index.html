@@ -13,6 +13,7 @@
   <body>
     <div id="score">0</div>
     <canvas id="snakeboard" width="300" height="300"></canvas>
+    <div id="scores"></div>
 
     <style>
       #snakeboard {
@@ -26,11 +27,62 @@
         text-align: center;
         font-size: 140px;
       }
+
+      #scores {
+        margin-top: 350px;
+      }
     </style>
   </body>
 
-  <script>
-    // JSはキャメルケースが一般的だが、今回はスネークケースsnake_game
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.4.0/firebase-app.js";
+    // import { getAnalytics } from "https://www.gstatic.com/firebasejs/9.0.2/firebase-analytics.js";
+    // TODO: Add SDKs for Firebase products that you want to use
+    // https://firebase.google.com/docs/web/setup#available-libraries
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      getDocs,
+      query,
+      orderBy,
+      limit,
+    } from "https://www.gstatic.com/firebasejs/9.4.0/firebase-firestore.js";
+
+    // Your web app's Firebase configuration
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    const firebaseConfig = {
+    apiKey: "AIzaSyAnnRADaeXb-X4-tm5cFi8-Xikx1uj9FZk",
+    authDomain: "snake-game-94625.firebaseapp.com",
+    projectId: "snake-game-94625",
+    storageBucket: "snake-game-94625.appspot.com",
+    messagingSenderId: "285129379369",
+    appId: "1:285129379369:web:ce6539f050dd093d909638",
+    measurementId: "G-VJK4F8KTW1"
+    };
+  
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const scoresRef = collection(db, "scores");
+    const scores = document.getElementById("scores");
+    getDocs(query(scoresRef, orderBy("score", "desc"), limit(3))).then((snap) => {
+    // arrow関数でobjectをすぐに返す場合は()をつける
+    // doc.id === "kxaKJf88Ql8zuIkjJhr9"
+    // doc.data() === {score: 250}
+    const data = snap.docs.map((doc) => ({ id: doc.id, ...doc.data({ serverTimestamps: 'estimate' }) }));
+    data.forEach((number) => {
+      const date = number.createdAt.toDate();
+      const newDiv = document.createElement("div");
+      newDiv.appendChild(document.createTextNode("Score " + number.score + ", Date "));
+      newDiv.appendChild(document.createTextNode(`${date.getMonth()+1} 月 ${date.getDate()} 日 ${date.getHours()} 時 ${date.getMinutes()} 分`));
+      scores.appendChild(newDiv);
+    });
+    console.log(data);
+    });
+
+  // JSはキャメルケースが一般的だが、今回はスネークケースsnake_game
     const board_border = "black";
     const board_background = "white";
     const snake_col = "lightblue";
@@ -78,7 +130,7 @@
             y,
             dx: [-5, 5][randomInt(0, 1)],
             dy: [-5, 5][randomInt(0, 1)],
-            poison: true
+            poison: true,
           });
       }
       while (foods.filter((food) => !food.poison).length < 2) {
@@ -93,7 +145,7 @@
             y,
             dx: [-5, 5][randomInt(0, 1)],
             dy: [-5, 5][randomInt(0, 1)],
-            poison: false
+            poison: false,
           });
       }
       while (n > foods.length) {
@@ -108,7 +160,7 @@
             y,
             dx: [-5, 5][randomInt(0, 1)],
             dy: [-5, 5][randomInt(0, 1)],
-            poison: [true, false][randomInt(0,1)]
+            poison: [true, false][randomInt(0, 1)],
           });
       }
 
@@ -151,7 +203,7 @@
             y: prevFood.y + crashFoods[0].dy,
             dx: crashFoods[0].dx,
             dy: crashFoods[0].dy,
-            poison: prevFood.poison
+            poison: prevFood.poison,
           };
         } else if (crashFoods.length > 1) {
           return {
@@ -159,7 +211,7 @@
             y: prevFood.y - prevFood.dy,
             dx: -prevFood.dx,
             dy: -prevFood.dy,
-            poison: prevFood.poison
+            poison: prevFood.poison,
           };
         }
         // 壁の反射
@@ -197,7 +249,9 @@
         if (crashSnakeIndex !== -1) {
           if (self.poison) {
             clearInterval(game);
-            window.alert("GAME OVER")
+            window.alert("GAME OVER");
+            // key と value同じなら省略可能
+            addDoc(scoresRef, { score, createdAt: new Date() });
             return self;
           }
           // x方向に横並び
@@ -264,7 +318,7 @@
             y: prevFood.y - prevFood.dy,
             dx: -prevFood.dx,
             dy: -prevFood.dy,
-            poison: prevFood.poison
+            poison: prevFood.poison,
           };
         }
         return {
@@ -284,11 +338,11 @@
 
     // main function called repeatedly to keep the game running
     function main() {
-
       game = setInterval(function onTick() {
         if (has_game_ended()) {
           clearInterval(game);
-          window.alert("GAME OVER")
+          window.alert("GAME OVER");
+          addDoc(scoresRef, { score, createdAt: new Date() });
         }
         changing_direction = false;
         clear_board();
@@ -408,14 +462,14 @@
           [food.y, food.y - 5, food.y + 5].includes(snake[0].y)
         );
       });
-      if (!has_eaten_food){
+      if (!has_eaten_food) {
         // Remove the last part of snake body
         snake.pop();
         return;
       }
       if (!has_eaten_food.poison) {
         // Increase score
-        score += 10;
+        score += 1;
         // Display score on screen
         document.getElementById("score").innerHTML = score;
         // .filter：trueだけを残す
@@ -429,7 +483,8 @@
         gen_foods(num_of_foods);
       } else {
         clearInterval(game);
-        window.alert("GAME OVER")
+        window.alert("GAME OVER");
+        addDoc(scoresRef, { score, createdAt: new Date() });
       }
     }
   </script>
